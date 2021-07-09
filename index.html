@@ -11,10 +11,8 @@
     <div class="settingsRef"><a href="settings.html">Перейти на страницу настроек</a></div>
 
     <script type="module">
-        console.log(localStorage)
-
         import * as d3 from "https://cdn.skypack.dev/d3@4";
-        import {getTooltipText} from "./javascripts/utils.js";
+        import {getTooltipText, prepareData} from "./javascripts/utils.js";
 
         const maxWidth = 1000;
         const maxHeight = 420;
@@ -40,25 +38,15 @@
             function(data) {
                 // console.log(data)
 
-                // Список студентов
-                let students = Array.from(new Set(data.map(item => item.lastName)))
+                let {students, dataReady} = prepareData(data);
+
+                // console.log(dataReady)
+
                 // Палитра
                 let myColor = (name) => {
                     let colors = ["#8dd3c7", "#80b1d3", "#bebada", "#fb8072"];
                     return colors[students.indexOf(name)]
                 }
-
-                // Подготовка данных
-                let dataReady = students.map(student => {
-                    return {
-                        name: student,
-                        values: data.filter((d) =>
-                            d.lastName === student
-                        )
-                    }
-                })
-
-                // console.log(dataReady)
 
                 // Ось X
                 let x = d3.scaleLinear()
@@ -138,6 +126,9 @@
                     .on("mousemove", mousemove)
                     .on("mouseleave", mouseleave)
 
+                console.log(dataReady)
+                if (dataReady[0].values.length === 0) return 0;
+
                 // Легенда
                 svg
                     .selectAll("myLabels")
@@ -146,7 +137,7 @@
                     .append('g')
                     .append("text")
                     .datum((d) => { return {name: d.name, value: d.values[d.values.length - 1]}; })
-                    .attr("transform", (d) => { return "translate(" + x(d.value.lessonNum) + "," + y(d.value.grade) + ")"; })
+                    .attr("transform", (d) => {return "translate(" + x(d.value.lessonNum) + "," + y(d.value.grade) + ")"; })
                     .attr("x", 12) // Смещение надписи
                     .text((d) => { return d.name; })
                     .style("fill", (d) => { return myColor(d.name) })
