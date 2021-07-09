@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>График успеваемости</title>
+    <link rel="stylesheet" href="stylesheets/index.css">
+</head>
+<body>
+
+    <div class="output"></div>
+    <div class="settingsRef"><a href="settings.html">Перейти на страницу настроек</a></div>
+
+    <script type="module">
+        console.log(localStorage)
+
+        import * as d3 from "https://cdn.skypack.dev/d3@4";
+        import {getTooltipText} from "./javascripts/utils.js";
+
+        const maxWidth = 1000;
+        const maxHeight = 420;
+
+        let margin = {top: 10, right: 60, bottom: 60, left: 90},
+            aspect = innerWidth / innerHeight,
+            width = innerWidth - 100 - margin.left - margin.right,
+            height = width / aspect - margin.top - margin.bottom;
+
+        width = width > maxWidth ? maxWidth : width;
+        height = height > maxHeight ? maxHeight : height;
+
+
+        let svg = d3.select(".output")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.json("performance.json",
+            function(data) {
+                // console.log(data)
+
+                // Список студентов
+                let students = Array.from(new Set(data.map(item => item.lastName)))
+                // Палитра
+                let myColor = (name) => {
+                    let colors = ["#8dd3c7", "#80b1d3", "#bebada", "#fb8072"];
+                    return colors[students.indexOf(name)]
+                }
+
+                // Подготовка данных
+                let dataReady = students.map(student => {
+                    return {
+                        name: student,
+                        values: data.filter((d) =>
+                            d.lastName === student
+                        )
+                    }
+                })
+
+                // console.log(dataReady)
+
+                // Ось X
+                let x = d3.scaleLinear()
+                    .domain( [0, 21] )
+                    .range([ 0, width ]);
+                svg.append("g")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(d3.axisBottom(x));
+
+                svg.append("text")
+                    .text("Номер занятия")
+                    .attr("x", width - 40)
+                    .attr("y", height + 40)
+
+                // Ось Y
+                let y = d3.scaleLinear()
+                    .domain( [40, 100])
+                    .range([ height, 0 ]);
+                svg.append("g")
+                    .call(d3.axisLeft(y));
+
+                svg.append("text")
+                    .text("Оценка")
+                    .attr("x", -margin.left)
+                    .attr("y", 10)
+
+                // Линии
+                let line = d3.line()
+                    .x((d) => { return x(d.lessonNum) })
+                    .y((d) => { return y(d.grade) })
+                svg.selectAll("myLines")
+                    .data(dataReady)
+                    .enter()
+                    .append("path")
+                    .attr("d", (d) => { return line(d.values) } )
+                    .attr("stroke", (d) => { return myColor(d.name) })
+                    .style("stroke-width", 4)
+                    .style("fill", "none")
+
+                let mouseleave = function () {
+                    Tooltip
+                        .style("opacity", 0)
+                }
+                let mousemove = function (d) {
+                    Tooltip
+                        .html(getTooltipText(d))
+                        .style("left", (d3.mouse(this)[0] + 70) + "px")
+                        .style("top", (d3.mouse(this)[1] + 30) + "px")
+                }
+                let mouseover = function () {
+                    Tooltip
+                        .style("opacity", 1)
+                }
+
+                // Подсказка
+                let Tooltip = d3.select(".output")
+                    .append("div")
+                    .style("opacity", 0)
+                    .attr("class", "tooltip")
+
+                // Точки
+                svg
+                    .selectAll("myDots")
+                    .data(dataReady)
+                    .enter()
+                    .append('g')
+                    .style("fill", (d) => { return myColor(d.name) })
+                    .selectAll("myPoints")
+                    .data((d) =>{ return d.values })
+                    .enter()
+                    .append("circle")
+                    .attr("cx", (d) => { return x(d.lessonNum) } )
+                    .attr("cy", (d) => { return y(d.grade) } )
+                    .attr("r", 5)
+                    .attr("stroke", "white")
+                    .on("mouseover", mouseover)
+                    .on("mousemove", mousemove)
+                    .on("mouseleave", mouseleave)
+
+                // Легенда
+                svg
+                    .selectAll("myLabels")
+                    .data(dataReady)
+                    .enter()
+                    .append('g')
+                    .append("text")
+                    .datum((d) => { return {name: d.name, value: d.values[d.values.length - 1]}; })
+                    .attr("transform", (d) => { return "translate(" + x(d.value.lessonNum) + "," + y(d.value.grade) + ")"; })
+                    .attr("x", 12) // Смещение надписи
+                    .text((d) => { return d.name; })
+                    .style("fill", (d) => { return myColor(d.name) })
+                    .style("font-size", 15)
+            })
+    </script>
+</body>
+</html>
