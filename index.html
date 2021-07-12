@@ -88,7 +88,7 @@
 
                 let mouseleave = function () {
                     Tooltip
-                        .style("opacity", 0)
+                        .style("display", "none")
                 }
                 let mousemove = function (d) {
                     Tooltip
@@ -98,13 +98,13 @@
                 }
                 let mouseover = function () {
                     Tooltip
-                        .style("opacity", 1)
+                        .style("display", "block")
                 }
 
                 // Подсказка
                 let Tooltip = d3.select(".output")
                     .append("div")
-                    .style("opacity", 0)
+                    .style("display", "none")
                     .attr("class", "tooltip")
 
                 // Точки
