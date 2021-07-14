@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>График успеваемости</title>
     <link rel="stylesheet" href="stylesheets/index.css">
+    <script src="javascripts/d3.v4.min.js"></script>
 </head>
 <body>
 
@@ -11,7 +12,6 @@
     <div class="settingsRef"><a href="settings.html">Перейти на страницу настроек</a></div>
 
     <script type="module">
-        import * as d3 from "https://cdn.skypack.dev/d3@4";
         import {getTooltipText, prepareData} from "./javascripts/utils.js";
 
         const maxWidth = 1000;
@@ -115,7 +115,7 @@
                     .append('g')
                     .style("fill", (d) => { return myColor(d.name) })
                     .selectAll("myPoints")
-                    .data((d) =>{ return d.values })
+                    .data((d) => { return d.values })
                     .enter()
                     .append("circle")
                     .attr("cx", (d) => { return x(d.lessonNum) } )
@@ -126,7 +126,8 @@
                     .on("mousemove", mousemove)
                     .on("mouseleave", mouseleave)
 
-                console.log(dataReady)
+                // console.log(dataReady)
+
                 if (dataReady[0].values.length === 0) return 0;
 
                 // Легенда
