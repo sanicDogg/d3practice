@@ -13,6 +13,7 @@ document.querySelector(".indexRef").addEventListener("click", () => {
     localStorage.setItem("students", formData.get("students"));
     localStorage.setItem("lessonType", formData.get("lessonType"));
     localStorage.setItem("topicNum", formData.get("topicNum"));
+    localStorage.setItem("chartType", formData.get("chartType"));
 
     window.location = "index.html";
 })

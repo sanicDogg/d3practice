@@ -1,3 +1,56 @@
+export function prepareDataLinear(data) {
+    // Если нужно отобразить график для одного студента
+    let student = getStudentLastName(Number(localStorage.getItem("students")));
+
+    // Список студентов
+    let students = Array.from(new Set(data.map(item => item.lastName)))
+
+    if (student) {
+        students = [student];
+    }
+
+    // Подготовка данных
+    let dataReady = students.map(student => {
+        return {
+            name: student,
+            values: data.filter((d) =>
+                getFilterExpression(d, student)
+            )
+        }
+    });
+
+    return {students: students, dataReady: dataReady}
+}
+
+export function prepareDataBarplot(data) {
+    // Если нужно отобразить график для одного студента
+    let lastName = getStudentLastName(Number(localStorage.getItem("students")));
+
+    let students = Array.from(new Set(data.map(item => item.lastName)));
+    let lessonNums = Array.from(new Set(data.map(item => item.lessonNum)));
+
+    if (lastName) {
+        students = [lastName];
+    }
+
+    let preparedData = [];
+
+    for (let i = 1; i <= lessonNums.length; i++) {
+        let students = data.filter(student =>
+             student.lessonNum === i && getFilterExpression(student, lastName));
+        // Если нет подходящих студентов, прекращаем итерацию
+        if (students.length === 0) continue;
+
+        let obj = {group: i}
+        students.forEach(student => {
+            obj[student.lastName] = student.grade;
+        });
+        preparedData.push(obj)
+    }
+
+    return { subgroups: students, groups: lessonNums, preparedData: preparedData }
+}
+
 export function getTooltipText (data) {
     let {lastName, lessonNum, grade, semester, topicNum,
         lessonType, hoursCount, place, borderControl} = data;
@@ -30,29 +83,22 @@ export function getTooltipText (data) {
         + "<br>Место проведения: " + place + borderControlReady)
 }
 
-export function prepareData(data) {
-    // Если нужно отобразить график для одного студента
-    let student = getStudentLastName(Number(localStorage.getItem("students")));
+function getFilterExpression(d, studentLastName) {
+    let lastNameExpression = d.lastName === studentLastName;
+    if (!studentLastName) lastNameExpression = true;
 
-    // Список студентов
-    let students = Array.from(new Set(data.map(item => item.lastName)))
+    let lessonType = getLessonType(Number(localStorage.getItem("lessonType")));
 
-    if (student) {
-        students = [student];
-    }
+    let lessonTypeExpression = d.lessonType === lessonType;
+    if (!lessonType) lessonTypeExpression = true;
 
-    // Подготовка данных
-    let dataReady = students.map(student => {
-        return {
-            name: student,
-            values: data.filter((d) =>
-                getFilterExpression(d, student)
-            )
-        }
-    });
+    let topicNum = getTopicNum(Number(localStorage.getItem("topicNum")));
+    let topicNumExpression = d.topicNum === topicNum;
+    if (!topicNum) topicNumExpression = true;
 
-    return {students: students, dataReady: dataReady}
+    return lastNameExpression && lessonTypeExpression && topicNumExpression;
 }
+
 
 function getStudentLastName(index) {
     switch (index) {
@@ -99,17 +145,4 @@ function getTopicNum(index) {
         case 5:
             return "4"
     }
-}
-
-function getFilterExpression(d, student) {
-    let lessonType = getLessonType(Number(localStorage.getItem("lessonType")));
-
-    let lessonTypeExpression = d.lessonType === lessonType;
-    if (!lessonType) lessonTypeExpression = true;
-
-    let topicNum = getTopicNum(Number(localStorage.getItem("topicNum")));
-    let topicNumExpression = d.topicNum === topicNum;
-    if (!topicNum) topicNumExpression = true;
-
-    return (d.lastName === student) && lessonTypeExpression && topicNumExpression;
 }
