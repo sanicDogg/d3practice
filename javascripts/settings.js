@@ -14,6 +14,7 @@ document.querySelector(".indexRef").addEventListener("click", () => {
     localStorage.setItem("lessonType", formData.get("lessonType"));
     localStorage.setItem("topicNum", formData.get("topicNum"));
     localStorage.setItem("chartType", formData.get("chartType"));
+    localStorage.setItem("group", formData.get("group"));
 
     window.location = "index.html";
 })

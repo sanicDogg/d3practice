@@ -18,6 +18,20 @@ class Chart {
                 "translate(" + this.margin.left + "," + this.margin.top + ")");
     }
 
+    drawAxisXText(svg) {
+        svg.append("text")
+            .text("Номер занятия")
+            .attr("x", this.width - 40)
+            .attr("y", this.height + 40)
+    }
+
+    drawAxisYText(svg) {
+        svg.append("text")
+            .text("Оценка")
+            .attr("x", -this.margin.left)
+            .attr("y", 10)
+    }
+
     makeTooltip() {
         return d3.select(".output")
         .append("div")
@@ -32,8 +46,9 @@ export class LinearChart extends Chart{
         let svg = this.getSvg();
         let width = this.width;
         let height = this.height;
-        let margin = this.margin;
         let Tooltip = this.makeTooltip();
+        let drawAxisXText = this.drawAxisXText.bind(this);
+        let drawAxisYText = this.drawAxisYText.bind(this);
 
         d3.json("performance.json", function(data) {
 
@@ -51,11 +66,7 @@ export class LinearChart extends Chart{
             svg.append("g")
                 .attr("transform", "translate(0," + height + ")")
                 .call(d3.axisBottom(x));
-
-            svg.append("text")
-                .text("Номер занятия")
-                .attr("x", width - 40)
-                .attr("y", height + 40)
+            drawAxisXText(svg);
 
             // Ось Y
             let y = d3.scaleLinear()
@@ -63,11 +74,7 @@ export class LinearChart extends Chart{
                 .range([ height, 0 ]);
             svg.append("g")
                 .call(d3.axisLeft(y));
-
-            svg.append("text")
-                .text("Оценка")
-                .attr("x", -margin.left)
-                .attr("y", 10)
+            drawAxisYText(svg)
 
             // Линии
             let line = d3.line()
@@ -128,7 +135,7 @@ export class LinearChart extends Chart{
                 .append('g')
                 .append("text")
                 .datum((d) => { return {name: d.name, value: d.values[d.values.length - 1]}; })
-                .attr("transform", (d) => {return "translate(" + x(d.value.lessonNum) + "," + y(d.value.grade) + ")"; })
+                .attr("transform", (d) => { return "translate(" + x(d.value.lessonNum) + "," + y(d.value.grade) + ")"; })
                 .attr("x", 12) // Смещение надписи
                 .text((d) => d.name )
                 .style("fill", (d) => myColor(d.name) )
@@ -150,6 +157,8 @@ export class BarplotChart extends Chart {
         let height = this.height;
         let prepareData = this.prepareData;
         let Tooltip = this.makeTooltip();
+        let drawAxisXText = this.drawAxisXText.bind(this);
+        let drawAxisYText = this.drawAxisYText.bind(this);
 
 
         d3.json("performance.json", function(data) {
@@ -175,13 +184,15 @@ export class BarplotChart extends Chart {
             svg.append("g")
                 .attr("transform", "translate(0," + height + ")")
                 .call(d3.axisBottom(x).tickSizeOuter(0));
+            drawAxisXText(svg);
 
             // Ось Y
             let y = d3.scaleLinear()
-                .domain([0, 400])
+                .domain([0, subgroups.length * 100])
                 .range([ height, 0 ]);
             svg.append("g")
                 .call(d3.axisLeft(y));
+            drawAxisYText(svg);
 
             let stackedData = d3.stack()
                 .keys(subgroups)
@@ -189,14 +200,14 @@ export class BarplotChart extends Chart {
 
             // DEBUG
 
-            // console.log("subgroups:")
-            // console.log(subgroups)
-            // console.log("groups:")
-            // console.log(groups)
-            // console.log("data:")
-            // console.log(preparedData)
-            // console.log("stackedData:")
-            // console.log(stackedData)
+            console.log("subgroups:")
+            console.log(subgroups)
+            console.log("groups:")
+            console.log(groups)
+            console.log("data:")
+            console.log(preparedData)
+            console.log("stackedData:")
+            console.log(stackedData)
 
             let mouseleave = function () {
                 Tooltip
